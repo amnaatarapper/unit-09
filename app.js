@@ -3,7 +3,7 @@
 // load modules
 const express = require('express');
 const morgan = require('morgan');
-const router = require('./routes');
+const routes = require('./routes');
 
 // variable to enable global error logging
 const enableGlobalErrorLogging = process.env.ENABLE_GLOBAL_ERROR_LOGGING === 'true';
@@ -16,9 +16,6 @@ app.use(morgan('dev'));
 
 // SEQUELIZE
 const db = require('./db');
-const {
-  Course, User
-} = db.models;
 
 // DB CONNECTION TEST
 db.sequelize
@@ -30,7 +27,8 @@ db.sequelize
     console.error('Unable to connect to the database:', err);
   });
 
-
+// On /api request use routes
+app.use('/api', routes);
 
 // TODO setup your api routes here
 
