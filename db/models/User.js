@@ -1,7 +1,5 @@
 const Sequelize = require('sequelize');
 
-const Course = require('./Course');
-
 module.exports = (sequelize) => {
     class User extends Sequelize.Model {}
 
@@ -60,8 +58,6 @@ module.exports = (sequelize) => {
             },
           },
     }, { sequelize });
-
-  
-
+    
     return User;
 };

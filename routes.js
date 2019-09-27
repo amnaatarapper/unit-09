@@ -9,25 +9,49 @@ const {
 // Router instatiation
 const router = express.Router();
 
-router.get('/', (req, res, next) => {
-	Course.findAll({
+
+// Find all courses and their owner
+router.get('/', async (req, res, next) => {
+
+	try {
+
+	  	const courses = await Course.findAll({
 		include: [{
 			model: User,
 			attributes: ['id', 'firstName', 'lastName', 'emailAddress']
 		}]})
-		.then(courses => {
-			res.status(200);
-			res.json({ courses });
-		})
-		.catch(err => {
-			err.status = 400;
-			next(err);
-		});
-});
+		
+		res.status(200).json({ courses });
 
+	  	console.log( courses.map(course => course.toJSON()));
 
+	} catch (err) {
+		err.status = 400;
+		next(err);
+	}
+  });
 
+  // Find a specific course and his owner
+  router.get('/courses/:id', async (req, res, next) => {
 
+	try {
+
+	  	const course = await Course.findOne({
+		where : { id: req.params.id },
+		include: [{
+			model: User,
+			attributes: ['id', 'firstName', 'lastName', 'emailAddress']
+		}]})
+		
+		res.status(200).json({ course });
+
+	  	console.log( course.toJSON() );
+
+	} catch (err) {
+		err.status = 400;
+		next(err);
+	}
+  });
 
 
 
