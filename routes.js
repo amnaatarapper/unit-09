@@ -16,7 +16,7 @@ const router = express.Router();
 //****** COURSES ROUTES *********/
 
 // Find all courses and their owners
-router.get('/', async (req, res, next) => {
+router.get('/courses', async (req, res, next) => {
 
 	try {
 
@@ -34,7 +34,7 @@ router.get('/', async (req, res, next) => {
 		console.log(courses.map(course => course.toJSON()));
 
 	} catch (err) {
-		err.status = 400;
+		err.status = 404;
 		next(err);
 	}
 });
@@ -150,6 +150,7 @@ router.post('/users', async (req, res, next) => {
 			res.status(400).json({ "message":"This user already exists" });
 		} else {
 			res.status(400).end();
+			next(error);
 		}
 }});
 
