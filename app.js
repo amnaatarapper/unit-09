@@ -34,10 +34,12 @@ db.sequelize
     console.error('Unable to connect to the database:', err);
   });
 
-// On /api request use routes
+// TODO setup your api routes here
+
+// On /api request use routes.js
 app.use('/api', routes);
 
-// TODO setup your api routes here
+
 
 
 // setup a friendly greeting for the root route
