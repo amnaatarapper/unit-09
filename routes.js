@@ -134,15 +134,14 @@ router.post('/users', async (req, res, next) => {
 		user.password = bycryptjs.hashSync(req.body.password);
 		await User.create(user);
 		res.status(201).end();
-		console.log(user.toJSON());
 
 	} catch (err) {
-		if (error.name === 'SequelizeValidationError') {
-			const errors = error.errors.map(err => err.message);
+		if (err.name === 'SequelizeValidationError') {
+			const errors = err.errors.map(err => err.message);
 			console.error('Validation errors: ', errors);
 			res.status(400).json({ errors });
-		} else if (error.name === 'SequelizeUniqueConstraintError') {
-			const errors = error.errors.map(err => err.message);
+		} else if (err.name === 'SequelizeUniqueConstraintError') {
+			const errors = err.errors.map(err => err.message);
 			console.error('Validation errors: ', errors);
 			res.status(400).json({ "message":"This user already exists" });
 		} else {
