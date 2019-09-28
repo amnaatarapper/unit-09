@@ -34,7 +34,7 @@ router.get('/courses', async (req, res, next) => {
 		console.log(courses.map(course => course.toJSON()));
 
 	} catch (err) {
-		err.status = 404;
+		res.status(500).end();
 		next(err);
 	}
 });
@@ -54,20 +54,21 @@ router.get('/courses/:id', async (req, res, next) => {
 			}]
 		})
 
-		res.status(200).json({
-			course
-		});
-
-		console.log(course.toJSON());
+		if (course) {
+			res.status(200).json({ course });
+			console.log(course.toJSON());
+		} else {
+			res.status(404).end();
+		}
 
 	} catch (err) {
-		err.status = 400;
+		res.status(500).end();
 		next(err);
 	}
 });
 
 // Add new course
-router.post('/courses', async (req, res, next) => {
+router.post('/courses', authentification, async (req, res, next) => {
 
 	try {
 
@@ -85,7 +86,9 @@ router.post('/courses', async (req, res, next) => {
 				})
 			} else {
 				try {
-					const course = await Course.create(req.body);
+					let course = req.body;
+					course.userId = req.currentUser.id;
+					await Course.create(course);
 					res.status(201).end();
 					console.log(course.toJSON());
 				} catch (error) {
@@ -95,38 +98,32 @@ router.post('/courses', async (req, res, next) => {
 						res.status(400).json({
 							errors
 						});
-						next(err);
 
 					} else {
 						res.status(400).end();
-						next(err);
 					}
 				}
 			}
 		} else {
 			if (req.body.title && req.body.description && req.body.UserId) {
 				res.status(500).end();
-				next(err);
 			} else {
 				res.status(400).end();
-				next(err);
 			}
 		}
 
 	} catch (err) {
-		res.status(400).end();
+		res.status(500).end();
 		next(err);
 	}
 });
-
-
 
 //****** USERS ROUTES *********/
 
 // Get the currently logged user
 router.get('/users', authentification, (req, res, next) => {
 	const user = req.currentUser;
-	res.json( user );
+	res.json({ user });
 });
 
 // Add a new user
@@ -139,7 +136,7 @@ router.post('/users', async (req, res, next) => {
 		res.status(201).end();
 		console.log(user.toJSON());
 
-	} catch (error) {
+	} catch (err) {
 		if (error.name === 'SequelizeValidationError') {
 			const errors = error.errors.map(err => err.message);
 			console.error('Validation errors: ', errors);
@@ -150,7 +147,7 @@ router.post('/users', async (req, res, next) => {
 			res.status(400).json({ "message":"This user already exists" });
 		} else {
 			res.status(400).end();
-			next(error);
+			next(err);
 		}
 }});
 
