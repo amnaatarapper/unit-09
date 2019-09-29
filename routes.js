@@ -33,9 +33,9 @@ router.get('/courses', async (req, res, next) => {
 
 		console.log(courses.map(course => course.toJSON()));
 
-	} catch (err) {
+	} catch (error) {
 		res.status(500).end();
-		next(err);
+		next(error);
 	}
 });
 
@@ -61,9 +61,9 @@ router.get('/courses/:id', async (req, res, next) => {
 			res.status(404).end();
 		}
 
-	} catch (err) {
+	} catch (error) {
 		res.status(500).end();
-		next(err);
+		next(error);
 	}
 });
 
@@ -93,7 +93,7 @@ router.post('/courses', authentification, async (req, res, next) => {
 					console.log(course.toJSON());
 				} catch (error) {
 					if (error.name === 'SequelizeValidationError') {
-						const errors = error.errors.map(err => err.message);
+						const errors = error.errors.map(error => error.message);
 						console.error('Validation errors: ', errors);
 						res.status(400).json({
 							errors
@@ -112,7 +112,7 @@ router.post('/courses', authentification, async (req, res, next) => {
 			}
 		}
 
-	} catch (err) {
+	} catch (error) {
 		
 	}
 });
@@ -124,22 +124,15 @@ router.put('/courses/:id', authentification, async (req, res, next) => {
 
 		const course = await Course.findByPk(req.params.id);
 
-		console.log(course.toJSON());
-		
 		if (course && course.userId === req.currentUser.id) {
 
-			if (req.body.title && req.body.description && req.body.userId) {
+			if (req.body.title || req.body.description) {
 				try {
 					await course.update(req.body);
-					res.status(200).end();
+					res.status(201).end();
 				} catch (error) {
-					if (err.name === 'SequelizeValidationError') {
-						const errors = err.errors.map(err => err.message);
-						console.error('Validation errors: ', errors);
-						res.status(400).json({ errors });
-					} else {
-						res.status(400).end();
-					}
+					res.status(500).end();
+					next(error);
 				}
 			} else {
 				res.status(400).end();
@@ -148,9 +141,10 @@ router.put('/courses/:id', authentification, async (req, res, next) => {
 			res.status(404).end();
 		}
 
-	} catch (err) {
+
+	} catch (error) {
 		res.status(500).end();
-		next(err);
+		next(error);
 	}
 	
 });
@@ -173,18 +167,18 @@ router.post('/users', async (req, res, next) => {
 		await User.create(user);
 		res.status(201).end();
 
-	} catch (err) {
-		if (err.name === 'SequelizeValidationError') {
-			const errors = err.errors.map(err => err.message);
+	} catch (error) {
+		if (error.name === 'SequelizeValidationError') {
+			const errors = error.errors.map(error => error.message);
 			console.error('Validation errors: ', errors);
 			res.status(400).json({ errors });
-		} else if (err.name === 'SequelizeUniqueConstraintError') {
-			const errors = err.errors.map(err => err.message);
+		} else if (error.name === 'SequelizeUniqueConstraintError') {
+			const errors = error.errors.map(error => error.message);
 			console.error('Validation errors: ', errors);
 			res.status(400).json({ "message":"This user already exists" });
 		} else {
 			res.status(400).end();
-			next(err);
+			next(error);
 		}
 }});
 
