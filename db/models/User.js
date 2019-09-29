@@ -56,7 +56,7 @@ module.exports = (sequelize) => {
                 msg: 'Please provide a password',
               },
             },
-          },
+          }
     }, { sequelize });
     
     return User;

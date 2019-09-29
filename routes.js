@@ -55,7 +55,9 @@ router.get('/courses/:id', async (req, res, next) => {
 		})
 
 		if (course) {
-			res.status(200).json({ course });
+			res.status(200).json({
+				course
+			});
 			console.log(course.toJSON());
 		} else {
 			res.status(404).end();
@@ -70,10 +72,9 @@ router.get('/courses/:id', async (req, res, next) => {
 // Add new course
 router.post('/courses', authentification, async (req, res, next) => {
 
-	try {
+	if (req.body.title) {
 
-		if (req.body.title) {
-
+		try {
 			const course = await Course.findOne({
 				where: {
 					title: req.body.title
@@ -98,22 +99,15 @@ router.post('/courses', authentification, async (req, res, next) => {
 						res.status(400).json({
 							errors
 						});
-
-					} else {
-						res.status(400).end();
 					}
 				}
 			}
-		} else {
-			if (req.body.title && req.body.description && req.body.UserId) {
-				res.status(500).end();
-			} else {
-				res.status(400).end();
-			}
+		} catch (error) {
+			res.status(500).end();
+			next(error);
 		}
-
-	} catch (error) {
-		
+	} else {
+		res.status(400).end();
 	}
 });
 
@@ -146,7 +140,33 @@ router.put('/courses/:id', authentification, async (req, res, next) => {
 		res.status(500).end();
 		next(error);
 	}
-	
+
+});
+
+// Delete course
+router.delete('/courses/:id', authentification, async (req, res, next) => {
+
+	try {
+
+		const course = await Course.findByPk(req.params.id);
+
+		if (course && course.userId === req.currentUser.id) {
+
+			try {
+				await course.destroy();
+				res.status(200).end();
+			} catch (error) {
+				res.status(500).end();
+				next(error);
+			}
+		} else {
+			res.status(404).end();
+		}
+	} catch (error) {
+		res.status(500).end();
+		next(error);
+	}
+
 });
 
 
@@ -155,7 +175,9 @@ router.put('/courses/:id', authentification, async (req, res, next) => {
 // Get the currently logged user
 router.get('/users', authentification, (req, res, next) => {
 	const user = req.currentUser;
-	res.json({ user });
+	res.json({
+		user
+	});
 });
 
 // Add a new user
@@ -171,16 +193,21 @@ router.post('/users', async (req, res, next) => {
 		if (error.name === 'SequelizeValidationError') {
 			const errors = error.errors.map(error => error.message);
 			console.error('Validation errors: ', errors);
-			res.status(400).json({ errors });
+			res.status(400).json({
+				errors
+			});
 		} else if (error.name === 'SequelizeUniqueConstraintError') {
 			const errors = error.errors.map(error => error.message);
 			console.error('Validation errors: ', errors);
-			res.status(400).json({ "message":"This user already exists" });
+			res.status(400).json({
+				"message": "This user already exists"
+			});
 		} else {
 			res.status(400).end();
 			next(error);
 		}
-}});
+	}
+});
 
 
 module.exports = router;
