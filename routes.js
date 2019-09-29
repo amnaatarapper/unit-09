@@ -72,10 +72,8 @@ router.get('/courses/:id', async (req, res, next) => {
 // Add new course
 router.post('/courses', authentification, async (req, res, next) => {
 
-	try {
-
-		if (req.body.title) {
-
+	if (req.body.title) {
+		try {
 			const course = await Course.findOne({
 				where: {
 					title: req.body.title
@@ -88,11 +86,12 @@ router.post('/courses', authentification, async (req, res, next) => {
 				})
 			} else {
 				try {
-					let course = req.body;
+
+					const course = req.body;
 					course.userId = req.currentUser.id;
 					await Course.create(course);
 					res.status(201).end();
-					console.log(course.toJSON());
+
 				} catch (error) {
 					if (error.name === 'SequelizeValidationError') {
 						const errors = error.errors.map(error => error.message);
@@ -100,23 +99,22 @@ router.post('/courses', authentification, async (req, res, next) => {
 						res.status(400).json({
 							errors
 						});
-
 					} else {
-						res.status(400).end();
+						res.status(500).end();
+						next(error);
 					}
-				}
+				}	 
 			}
-		} else {
-			
-			res.status(400).end();
-			
+
+		} catch (error) {
+			res.status(500).end();
+			next(error);
 		}
-
-	} catch (error) {
-		res.status(500).end();
+	} else {
+		res.status(400).end();
 	}
-});
 
+});
 
 // Update course
 router.put('/courses/:id', authentification, async (req, res, next) => {
