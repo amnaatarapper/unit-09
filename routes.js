@@ -113,10 +113,48 @@ router.post('/courses', authentification, async (req, res, next) => {
 		}
 
 	} catch (err) {
+		
+	}
+});
+
+// Update course
+router.put('/courses/:id', authentification, async (req, res, next) => {
+
+	try {
+
+		const course = await Course.findByPk(req.params.id);
+
+		console.log(course.toJSON());
+		
+		if (course && course.userId === req.currentUser.id) {
+
+			if (req.body.title && req.body.description && req.body.userId) {
+				try {
+					await course.update(req.body);
+					res.status(200).end();
+				} catch (error) {
+					if (err.name === 'SequelizeValidationError') {
+						const errors = err.errors.map(err => err.message);
+						console.error('Validation errors: ', errors);
+						res.status(400).json({ errors });
+					} else {
+						res.status(400).end();
+					}
+				}
+			} else {
+				res.status(400).end();
+			}
+		} else {
+			res.status(404).end();
+		}
+
+	} catch (err) {
 		res.status(500).end();
 		next(err);
 	}
+	
 });
+
 
 //****** USERS ROUTES *********/
 
