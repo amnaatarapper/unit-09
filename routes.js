@@ -1,6 +1,7 @@
 const express = require('express');
 const bycryptjs = require('bcryptjs');
 const authentification = require('./authentification');
+const { check, validationResult } = require('express-validator');
 
 // SEQUELIZE
 const db = require('./db');
@@ -69,83 +70,107 @@ router.get('/courses/:id', async (req, res, next) => {
 	}
 });
 
-// Add new course
-router.post('/courses', authentification, async (req, res, next) => {
+// Add new course 
+// VALIDATION
+router.post('/courses', [
+	check('title')
+	  .exists()
+	  .withMessage('Please provide a value for "title"'),
+	check('description')
+	  .exists()
+	  .withMessage('Please provide a value for "description"'),
+	check('userId')
+	  .exists()
+	  .withMessage('Please provide a value for "userId"')
+  ], authentification, async (req, res, next) => {
 
-	if (req.body.title) {
-		try {
-			const course = await Course.findOne({
-				where: {
-					title: req.body.title
-				}
-			});
+	const errors = validationResult(req);
+  	if (!errors.isEmpty()) {
+    	res.status(422).json({ errors: errors.array() });
+  	} else {
 
-			if (course) {
-				res.status(400).json({
-					"message": "this course already exists"
-				})
-			} else {
-				try {
-
-					const course = req.body;
-					course.userId = req.currentUser.id;
-					await Course.create(course);
-					res.status(201).end();
-
-				} catch (error) {
-					if (error.name === 'SequelizeValidationError') {
-						const errors = error.errors.map(error => error.message);
-						console.error('Validation errors: ', errors);
-						res.status(400).json({
-							errors
-						});
-					} else {
-						res.status(500).end();
-						next(error);
-					}
-				}	 
-			}
-
-		} catch (error) {
-			res.status(500).end();
-			next(error);
-		}
-	} else {
-		res.status(400).end();
-	}
-
+		  if (req.body.title) {
+			  try {
+				  const course = await Course.findOne({
+					  where: {
+						  title: req.body.title
+					  }
+				  });
+	  
+				  if (course) {
+					  res.status(400).json({
+						  "message": "this course already exists"
+					  })
+				  } else {
+					  try {
+	  
+						  const course = req.body;
+						  course.userId = req.currentUser.id;
+						  await Course.create(course);
+						  res.status(201).end();
+	  
+					  } catch (error) {
+						  if (error.name === 'SequelizeValidationError') {
+							  const errors = error.errors.map(error => error.message);
+							  console.error('Validation errors: ', errors);
+							  res.status(400).json({
+								  errors
+							  });
+						  } else {
+							  res.status(500).end();
+							  next(error);
+						  }
+					  }	 
+				  }
+	  
+			  } catch (error) {
+				  res.status(500).end();
+				  next(error);
+			  }
+		  } else {
+			  res.status(400).end();
+		  }
+	  }
 });
 
 // Update course
-router.put('/courses/:id', authentification, async (req, res, next) => {
+// VALIDATION
+router.put('/courses/:id', [
+	check('title')
+	  .exists()
+	  .withMessage('Please provide a value for "title"'),
+	check('description')
+	  .exists()
+	  .withMessage('Please provide a value for "description"')
+  ], authentification, async (req, res, next) => {
 
-	try {
+	const errors = validationResult(req);
+  	if (!errors.isEmpty()) {
+    	res.status(422).json({ errors: errors.array() });
+  	} else {
 
-		const course = await Course.findByPk(req.params.id);
-
-		if (course && course.userId === req.currentUser.id) {
-
-			if (req.body.title || req.body.description) {
+		  try {
+	  
+			  const course = await Course.findByPk(req.params.id);
+	  
+			  if (course && course.userId === req.currentUser.id) {
+	  
 				try {
 					await course.update(req.body);
 					res.status(201).end();
 				} catch (error) {
-					res.status(500).end();
-					next(error);
+					res.status(404).end();
 				}
-			} else {
-				res.status(400).end();
-			}
-		} else {
-			res.status(404).end();
-		}
+				
+			  } else {
+				  res.status(400).end();
+			  }
 
-
-	} catch (error) {
-		res.status(500).end();
-		next(error);
-	}
-	
+		  } catch (error) {
+			  res.status(500).end();
+			  next(error);
+		  }
+	  }
 });
 
 // Delete course
@@ -186,30 +211,53 @@ router.get('/users', authentification, (req, res, next) => {
 });
 
 // Add a new user
-router.post('/users', async (req, res, next) => {
-	try {
+// VALIDATION
+router.post('/users', [
+	check('firstName')
+	  .exists()
+	  .withMessage('Please provide a value for "firstName"'),
+	check('lastName')
+	  .exists()
+	  .withMessage('Please provide a value for "lastName"'),
+	check('emailAddress')
+	  .isEmail()
+	  .withMessage('Please provide a value for "emailAddress"'),
+	check('password')
+	  .exists()
+	  .withMessage('Please provide a value for "password"'),
+  ], async (req, res, next) => {
 
-		let user = req.body;
-		user.password = bycryptjs.hashSync(req.body.password);
-		await User.create(user);
-		res.status(201).end();
+	const errors = validationResult(req);
+	
+  	if (!errors.isEmpty()) {
+    	res.status(422).json({ errors: errors.array() });
+  	} else {
 
-	} catch (error) {
-		if (error.name === 'SequelizeValidationError') {
-			const errors = error.errors.map(error => error.message);
-			console.error('Validation errors: ', errors);
-			res.status(400).json({ errors });
-		} else if (error.name === 'SequelizeUniqueConstraintError') {
-			const errors = error.errors.map(error => error.message);
-			console.error('Validation errors: ', errors);
-			res.status(400).json({
-				"message": "This user already exists"
-			});
-		} else {
-			res.status(400).end();
-			next(error);
-		}
-	}
+		  try {
+	  
+			  let user = req.body;
+			  user.password = bycryptjs.hashSync(req.body.password);
+			  await User.create(user);
+			  res.status(201).end();
+	  
+		  } catch (error) {
+			  if (error.name === 'SequelizeValidationError') {
+				  const errors = error.errors.map(error => error.message);
+				  console.error('Validation errors: ', errors);
+				  res.status(400).json({ errors });
+			  } else if (error.name === 'SequelizeUniqueConstraintError') {
+				  const errors = error.errors.map(error => error.message);
+				  console.error('Validation errors: ', errors);
+				  res.status(400).json({
+					  "message": "This user already exists"
+				  });
+			  } else {
+				  res.status(400).end();
+				  next(error);
+			  }
+		  }
+	  }
+
 });
 
 
