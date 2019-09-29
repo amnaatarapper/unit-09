@@ -21,13 +21,15 @@ db.models.User = require('./models/User.js')(sequelize);
 
 db.models.Course.belongsTo(db.models.User, {
       foreignKey: {
-      fieldName: 'userId'
+      fieldName: 'userId',
+      allowNull: false
       },
 });
 
 db.models.User.hasMany(db.models.Course, {
           foreignKey: {
-            fieldName: 'userId'
+            fieldName: 'userId',
+            allowNull: false
           },
 });
   

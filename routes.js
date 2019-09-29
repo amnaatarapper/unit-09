@@ -86,7 +86,7 @@ router.post('/courses', [
 
 	const errors = validationResult(req);
   	if (!errors.isEmpty()) {
-    	res.status(422).json({ errors: errors.array() });
+    	res.status(400).json({ errors: errors.array() });
   	} else {
 
 		  if (req.body.title) {
@@ -107,7 +107,7 @@ router.post('/courses', [
 						  const course = req.body;
 						  course.userId = req.currentUser.id;
 						  await Course.create(course);
-						  res.status(201).end();
+						  res.status(201).location('/').end();
 	  
 					  } catch (error) {
 						  if (error.name === 'SequelizeValidationError') {
@@ -146,7 +146,7 @@ router.put('/courses/:id', [
 
 	const errors = validationResult(req);
   	if (!errors.isEmpty()) {
-    	res.status(422).json({ errors: errors.array() });
+    	res.status(400).json({ errors: errors.array() });
   	} else {
 
 		  try {
@@ -157,7 +157,7 @@ router.put('/courses/:id', [
 	  
 				try {
 					await course.update(req.body);
-					res.status(201).end();
+					res.status(201).location('/').end();
 				} catch (error) {
 					res.status(404).end();
 				}
@@ -190,7 +190,7 @@ router.delete('/courses/:id', authentification, async (req, res, next) => {
 				next(error);
 			}
 		} else {
-			res.status(404).end();
+			res.status(403).end();
 		}
 	} catch (error) {
 		res.status(500).end();
@@ -230,7 +230,7 @@ router.post('/users', [
 	const errors = validationResult(req);
 	
   	if (!errors.isEmpty()) {
-    	res.status(422).json({ errors: errors.array() });
+    	res.status(400).json({ errors: errors.array() });
   	} else {
 
 		  try {
@@ -238,7 +238,7 @@ router.post('/users', [
 			  let user = req.body;
 			  user.password = bycryptjs.hashSync(req.body.password);
 			  await User.create(user);
-			  res.status(201).end();
+			  res.status(201).location('/').end();
 	  
 		  } catch (error) {
 			  if (error.name === 'SequelizeValidationError') {
