@@ -31,9 +31,7 @@ router.get('/courses', async (req, res, next) => {
 		res.status(200).json({
 			courses
 		});
-
-		console.log(courses.map(course => course.toJSON()));
-
+		
 	} catch (error) {
 		res.status(500).end();
 		next(error);
