@@ -29,18 +29,14 @@ db.sequelize
   .authenticate()
   .then(() => {
     console.log('Connection has been established successfully.');
-    return db.sequelize.sync();
+    // return db.sequelize.sync();
   })
   .catch(err => {
     console.error('Unable to connect to the database:', err);
   });
-
-// TODO setup your api routes here
-
+  
 // On /api request use routes.js
 app.use('/api', routes);
-
-
 
 
 // setup a friendly greeting for the root route

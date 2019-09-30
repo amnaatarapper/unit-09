@@ -6,19 +6,23 @@ const {
 	User
 } = db.models;
 
+// Authentification middleware
+
 const authentification = async (req, res, next) => {
+  // Holds errors
   let message; 
     // Parse the user's credentials from the Authorization header.
   const credentials = auth(req);
 
-
+  // If Auth header exists
+    // Compare it against the db
   if(credentials) {
     const user = await User.findOne({
       where: {
         emailAddress: credentials.name
       }
     });
-
+    // If provided credentials password matches the db entry the user is authentificated
     if (user) {
       const authentificated = bycryptjs.compareSync(credentials.pass, user.password);
       if (authentificated) {
@@ -34,6 +38,7 @@ const authentification = async (req, res, next) => {
     message = 'Auth header not found';
   }
 
+  // if message variable holds any errors, access is denied
   if (message) {
     console.warn(message);
     res.status(401).json({ message: 'Access Denied' });
