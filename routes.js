@@ -22,6 +22,7 @@ router.get('/courses', async (req, res, next) => {
 	try {
 
 		const courses = await Course.findAll({
+			attributes: { exclude: ["createdAt", "updatedAt"] },
 			include: [{
 				model: User,
 				attributes: ['id', 'firstName', 'lastName', 'emailAddress']
@@ -30,7 +31,7 @@ router.get('/courses', async (req, res, next) => {
 
 		res.status(200).json({
 			courses
-		});
+		}); 
 		
 	} catch (error) {
 		res.status(500).end();
@@ -44,6 +45,7 @@ router.get('/courses/:id', async (req, res, next) => {
 	try {
 
 		const course = await Course.findOne({
+			attributes: { exclude: ["createdAt", "updatedAt"] },
 			where: {
 				id: req.params.id
 			},
@@ -57,7 +59,6 @@ router.get('/courses/:id', async (req, res, next) => {
 			res.status(200).json({
 				course
 			});
-			console.log(course.toJSON());
 		} else {
 			res.status(404).end();
 		}
@@ -104,8 +105,8 @@ router.post('/courses', [
 	  
 						  const course = req.body;
 						  course.userId = req.currentUser.id;
-						  await Course.create(course);
-						  res.status(201).location('/').end();
+						  const _course = await Course.create(course);
+						  res.status(201).location(`/courses/${_course.id}`).end();
 	  
 					  } catch (error) {
 						  if (error.name === 'SequelizeValidationError') {
@@ -155,7 +156,7 @@ router.put('/courses/:id', [
 	  
 				try {
 					await course.update(req.body);
-					res.status(201).location('/').end();
+					res.status(204).end();
 				} catch (error) {
 					res.status(404).end();
 				}
@@ -182,7 +183,7 @@ router.delete('/courses/:id', authentification, async (req, res, next) => {
 
 			try {
 				await course.destroy();
-				res.status(200).end();
+				res.status(204).end();
 			} catch (error) {
 				res.status(500).end();
 				next(error);
@@ -201,11 +202,30 @@ router.delete('/courses/:id', authentification, async (req, res, next) => {
 //****** USERS ROUTES *********/
 
 // Get the currently logged user
-router.get('/users', authentification, (req, res, next) => {
-	const user = req.currentUser;
-	res.json({
-		user
-	});
+router.get('/users', authentification, async (req, res, next) => {
+
+	const currentUser = req.currentUser;
+
+	if (currentUser) {
+
+		try {
+
+			const user = await User.findOne({
+				attributes: {exclude: ["createdAt", "updatedAt", "password"]},
+				where: {
+				  emailAddress: currentUser.emailAddress
+				}
+			  });
+
+			res.json({
+				user
+			});
+
+		} catch (error) {
+			res.status(401).end();
+		}
+	}
+	
 });
 
 // Add a new user
